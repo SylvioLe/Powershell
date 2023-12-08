@@ -56,7 +56,7 @@ $consolePtr = [Console.Window]::GetConsoleWindow()
 }
 function check-idle{
 $meldungszeit= 5 #Angabe in Minuten
-$Meldungszeit = New-TimeSpan -seconds $meldungszeit
+$Meldungszeit = New-TimeSpan -Minutes $meldungszeit
 $timetoshutdown = 10 #Angabe in Minuten
 $Timetoshutdown = New-TimeSpan -Minutes $timetoshutdown
 $meldung = 0
