@@ -1,4 +1,4 @@
-# this profile script is hardening the acces to the powershell without using application controll
+# this profile script is hardening the access to the powershell without using application controll
 
 
 # this file needs to be created at C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1
