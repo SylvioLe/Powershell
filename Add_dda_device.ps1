@@ -1,24 +1,26 @@
-$vmName = 'Gaming'
-$instanceId = '*PCI\VEN_1002&DEV_6779&SUBSYS_E164174B&REV_00\4&28CDDF4&0&00A*'
-$ErrorActionPreference = 'Stop'
-$vm = Get-VM -Name $vmName
-$dev = (Get-PnpDevice -PresentOnly).Where{ $_.InstanceId -like $instanceId }
-if (@($dev).Count -eq 1) {
+# Configure the VM for a Discrete Device Assignment
+$vm = "ddatest1"
+# Set automatic stop action to TurnOff
+Set-VM -Name $vm -AutomaticStopAction TurnOff
+# Enable Write-Combining on the CPU
+Set-VM -GuestControlledCacheTypes $true -VMName $vm
+# Configure 32 bit MMIO space
+Set-VM -LowMemoryMappedIoSpace 3Gb -VMName $vm
+# Configure Greater than 32 bit MMIO space
+Set-VM -HighMemoryMappedIoSpace 33280Mb -VMName $vm
 
+# Find the Location Path and disable the Device
+# Enumerate all PNP Devices on the system
+$pnpdevs = Get-PnpDevice -presentOnly
+# Select only those devices that are Display devices manufactured by NVIDIA
+$gpudevs = $pnpdevs | Where-Object {$_.Class -like "Display" -and $_.Manufacturer -like "NVIDIA"}
+# Select the location path of the first device that's available to be dismounted by the host.
+$locationPath = ($gpudevs | Get-PnpDeviceProperty DEVPKEY_Device_LocationPaths).data[0]
+# Disable the PNP Device
+Disable-PnpDevice -InstanceId $gpudevs[0].InstanceId
 
-Disable-PnpDevice -InstanceId $dev.InstanceId -Confirm:$false
-$locationPath = (Get-PnpDeviceProperty -KeyName DEVPKEY_Device_LocationPaths -InstanceId $dev.InstanceId).Data[0]
-Dismount-VmHostAssignableDevice -LocationPath $locationPath -Force -Verbose
-Set-VM -VM $vm -DynamicMemory -MemoryMinimumBytes 1024MB -MemoryMaximumBytes 4096MB -MemoryStartupBytes 1024MB -AutomaticStopAction TurnOff
+# Dismount the Device from the Host
+Dismount-VMHostAssignableDevice -Force -LocationPath $locationPath
 
-# If you want to play with GPUs:
-Set-VM -VM $vm -StaticMemory -MemoryStartupBytes 4096MB -AutomaticStopAction TurnOff
-Set-VM -VM $vm -GuestControlledCacheTypes $true -LowMemoryMappedIoSpace 1024mb -Verbose # -HighMemoryMappedIoSpace 4096mb -Verbose
-
-Add-VMAssignableDevice -VM $vm -LocationPath $locationPath -Verbose
-
-} else {
-
-$dev | Sort-Object -Property Class | Format-Table -AutoSize
-Write-Error -Message ('Number of devices: {0}' -f @($dev).Count)
-}
+# Assign the device to the guest VM.
+Add-VMAssignableDevice -LocationPath $locationPath -VMName $vm
