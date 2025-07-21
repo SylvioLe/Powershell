@@ -69,9 +69,9 @@ $FsiFileSystemUDF      = 4
   
 $fsi = New-Object -ComObject IMAPI2FS.MsftFileSystemImage  
   
-#$fsi.FileSystemsToCreate = $FsiFileSystemISO9660 + $FsiFileSystemJoliet  
+$fsi.FileSystemsToCreate = $FsiFileSystemISO9660 + $FsiFileSystemJoliet  
   
-$fsi.FileSystemsToCreate = $FsiFileSystemUDF  
+#$fsi.FileSystemsToCreate = $FsiFileSystemUDF  
 #When FreeMediaBlocks is set to 0 it allows the ISO file to be with unlimited size  
 $fsi.FreeMediaBlocks = 0  
 $fsi.VolumeName = $VolName  
