@@ -1,0 +1,41 @@
+Call PowerShell Cmdlets from C#
+
+You can call PowerShell cmdlets directly from your C# code. First, add a reference to System.Management.Automation to your project. Unfortunately, you need to do this by editing the .vcproj file manually with NotePad or another text editor. Add the following line to the References section:
+
+<Reference Include="System.Management.Automation" />
+
+Next, add these using statements to your .cs file:
+
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
+
+Create a runspace to host the PowerScript environment:
+
+Runspace runSpace = RunspaceFactory.CreateRunspace();
+runSpace.Open();
+
+Using the runspace, create a new pipeline for your cmdlets:
+
+Pipeline pipeline = runSpace.CreatePipeline();
+
+Create Command objects to represent the cmdlet(s) you want to execute and add them to the pipeline. This example retrieves all the processes and then sorts them by their memory usage.
+
+Command getProcess = new Command("Get-Process");
+Command sort = new Command("Sort-Object");
+sort.Parameters.Add("Property", "VM");
+pipeline.Commands.Add(getProcess);
+pipeline.Commands.Add(sort);
+
+The preceding code functions identically to the following PowerShell command line:
+
+PS > Get-Process | Sort-Object -Property VM
+
+Finally, execute the commands in the pipeline and do something with the output:
+
+Collection output = pipeline.Invoke();
+foreach (PSObject psObject in output)
+{
+  Process process = (Process)psObject.BaseObject;
+  Console.WriteLine("Process name: " + process.ProcessName);
+}
+
